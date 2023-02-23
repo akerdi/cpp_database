@@ -1,22 +1,29 @@
-#include <iostream>
+#include "readline.hpp"
 
-using namespace std;
-
-static int get_user_input(string& input, string prompt = "> ") {
-    cout << prompt;
-    getline(cin, input);
-    return input.length();
-}
+#include "statement.h"
 
 void start_database() {
     cout << "AKDatabase" << endl;
 
     while (true) {
         string userInput;
-        if (!get_user_input(userInput)) {
+        if (!read_line(userInput)) {
             cout << "请输入指令:select / insert" << endl;
-            return ;
+            continue;
         }
-        cout << "str: " << userInput << " len: " << userInput.length() << endl;
+        Statement statement;
+        switch (statement.input2Statement(userInput)) {
+            case SUCCESS: break;
+            case FAIL: {
+                cout << "fail input2Statement: " << userInput << endl;
+                continue;
+            }
+            case UNRECOGNIZED:
+            default: {
+                cout << "unrecognized command: " << userInput << endl;
+                continue;
+            }
+        }
+        cout << "command type: " << statement.type << " rowId: " << statement.row.id << endl;
     }
 }
