@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "*.iced": "coffeescript",
+        "*.conf": "json",
+        "istream": "cpp",
+        "string": "cpp",
+        "*.tcc": "cpp",
+        "streambuf": "cpp",
+        "sstream": "cpp",
+        "iostream": "cpp",
+        "iosfwd": "cpp"
+    }
+}
