@@ -3,32 +3,28 @@
 #include "statement.h"
 #include "table.h"
 #include "row.h"
+#include "cursor.h"
 
 EXECUTION_RESULT doHelpCommand(Table& table, string& userInput);
 
 // -------------------
 
-char* row_slot(Pager& pager, const uint32_t row_index) {
-    uint32_t page_index = row_index / ROW_COUNT_PER_PAGE;
-    void* page = pager.get_page(page_index);
-    uint32_t row_inline_index = row_index % ROW_COUNT_PER_PAGE;
-    return (char*)page + row_inline_index * ROW_SIZE;
-}
-
 EXECUTION_RESULT execSelect(Table& table, Statement& statement) {
     Row row;
-    for (uint32_t i = 0; i < table.num_rows; i++) {
-        char* slot = row_slot(*table.pager, i);
+    Cursor& cursor = Cursor::start_table(table);
+    while (!cursor.end_of_table) {
+        char* slot = (char*)cursor.cursor_value();
         row.deSerializedData(slot);
         row.print();
+        cursor.cursor_advance();
     }
     return EXEC_SUCCESS;
 }
 EXECUTION_RESULT execInsert(Table& table, Statement& statement) {
     Row& row = statement.row;
-    uint32_t insert_index = table.num_rows;
 
-    char* slot = row_slot(*table.pager, insert_index);
+    Cursor& cursor = Cursor::end_table(table);
+    char* slot = (char*)cursor.cursor_value();
     row.serializeData(slot);
 
     table.num_rows++;
@@ -51,7 +47,7 @@ void start_database() {
     InputBuffer inputBuffer;
     while (true) {
         if (!read_line(inputBuffer, "> ")) {
-            cout << "请输入指令:select / insert" << endl;
+            cout << "please type command:select / insert" << endl;
             continue;
         }
         string inputStr = string(inputBuffer.buffer);
@@ -63,7 +59,7 @@ void start_database() {
                     continue;
                 }
                 default: {
-                    cout << "未识别的指令: " << inputStr << endl;
+                    cout << "unrecognized command: " << inputStr << endl;
                 }
                     continue;
             }
@@ -85,7 +81,7 @@ void start_database() {
             case EXEC_SUCCESS: break;
             case EXEC_FAIL:
             default: {
-                cout << "执行失败" << endl;
+                cout << "execution fail!" << endl;
             }
                 continue;
         }

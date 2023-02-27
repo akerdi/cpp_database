@@ -30,7 +30,7 @@ Pager& Pager::openPager(const string& filename) {
 
 void* Pager::get_page(uint32_t index) {
     if (index > TABLE_MAX_PAGES) {
-        printf("获取页面超过最大有效页面: %d > %d\n", index, TABLE_MAX_PAGES);
+        printf("get page larger than maxmum: %d > %d\n", index, TABLE_MAX_PAGES);
         exit(1);
     }
     void* page = pages[index];
