@@ -4,16 +4,16 @@
 #include "row.h"
 
 typedef enum {
-    SELECT,
-    INSERT
+    STATEMENT_SELECT,
+    STATEMENT_INSERT
 } STATEMENT_TYPE;
 
 typedef enum {
-    FAIL,
-    SUCCESS,
-    UNRECOGNIZED,
-    STRING_TOO_LONG,
-    TABLE_FULL
+    EXEC_FAIL,
+    EXEC_SUCCESS,
+    EXEC_UNRECOGNIZED,
+    EXEC_STRING_TOO_LONG,
+    EXEC_TABLE_FULL
 } EXECUTION_RESULT;
 
 class Statement {
