@@ -6,6 +6,3 @@ Table& Table::openTable(const string& filename) {
     table->pager = pager;
     return *table;
 }
-
-
-

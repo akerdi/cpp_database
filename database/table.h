@@ -9,7 +9,7 @@ using namespace std;
 class Table {
 public:
     Pager* pager;
-    uint32_t num_rows;
+    uint32_t root_page_num;
 
     static Table& openTable(const string& filename);
 };

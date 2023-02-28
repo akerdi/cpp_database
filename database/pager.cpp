@@ -21,7 +21,11 @@ Pager& Pager::openPager(const string& filename) {
     fseek(file, 0L, SEEK_END);
     long file_length = ftell(file);
     pager->file_length = file_length;
-
+    pager->num_pages = file_length / PAGE_SIZE;
+    if (file_length % PAGE_SIZE) {
+        cout << "Interupt by opening a not full db! Incorrupt db file!" << endl;
+        exit(1);
+    }
     for (int i = 0; i < TABLE_MAX_PAGES; i++) {
         pager->pages[i] = NULL;
     }
@@ -43,17 +47,20 @@ void* Pager::get_page(uint32_t index) {
         fseek(file, index*PAGE_SIZE, SEEK_SET);
         fread(page, PAGE_SIZE, 1, file);
         pages[index] = page;
+        if (index >= num_pages) {
+            num_pages = index+1;
+        }
     }
     return pages[index];
 }
 
-void Pager::flushPage(uint32_t index, uint32_t size) {
+void Pager::flushPage(uint32_t index) {
     if (pages[index] == NULL) {
         std::cout << "Access empty data at index: " << index << "!" << endl;
         exit(1);
     }
     fseek(file, PAGE_SIZE * index, SEEK_SET);
-    fwrite(pages[index], size, 1, file);
+    fwrite(pages[index], PAGE_SIZE, 1, file);
 }
 
 void Pager::closeDB() {

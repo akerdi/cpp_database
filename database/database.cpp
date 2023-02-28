@@ -18,16 +18,40 @@ EXECUTION_RESULT execSelect(Table& table, Statement& statement) {
         row.print();
         cursor.cursor_advance();
     }
+
+    delete &cursor;
     return EXEC_SUCCESS;
+}
+void leaf_node_insert(Cursor& cursor, uint32_t key, Row& value) {
+    void* node = cursor.table->pager->get_page(cursor.page_num);
+    uint32_t num_cells = *leaf_node_num_cells(node);
+    if (cursor.row_num >= LEAF_NODE_MAX_CELL_COUNT) {
+        cout << "Need to implement leaf node splitting!" << endl;
+        exit(1);
+    }
+    if (cursor.row_num < num_cells) {
+        for (int32_t i = num_cells; i > cursor.row_num; i--) {
+            memcpy(leaf_node_cell(node, i), leaf_node_cell(node, i-1), LEAF_NODE_CELL_SIZE);
+        }
+    }
+
+    *leaf_node_num_cells(node) += 1;
+    *leaf_node_cell_key(node, cursor.row_num) = key;
+    value.serializeData((char*)leaf_node_cell_value(node, cursor.row_num));
 }
 EXECUTION_RESULT execInsert(Table& table, Statement& statement) {
     Row& row = statement.row;
 
     Cursor& cursor = Cursor::end_table(table);
-    char* slot = (char*)cursor.cursor_value();
-    row.serializeData(slot);
+    void* node = table.pager->get_page(cursor.page_num);
+    uint32_t num_cells = *leaf_node_num_cells(node);
+    if (num_cells >= LEAF_NODE_MAX_CELL_COUNT) {
+        return EXEC_TABLE_FULL;
+    }
 
-    table.num_rows++;
+    leaf_node_insert(cursor, row.id, row);
+
+    delete &cursor;
     return EXEC_SUCCESS;
 }
 
@@ -40,10 +64,20 @@ EXECUTION_RESULT execCommand(Table& table, Statement& statement) {
     return EXEC_UNRECOGNIZED;
 }
 
+void configTable(Table& table) {
+    if (table.pager->num_pages == 0) {
+        table.root_page_num = 0;
+        void* node = table.pager->get_page(table.root_page_num);
+        initialize_leaf(node);
+        set_node_root(node, true);
+    }
+}
+
 void start_database() {
     cout << "AKDatabase" << endl;
     Table& table = Table::openTable("row.db");
-    table.num_rows = table.pager->file_length / ROW_SIZE;
+    configTable(table);
+
     InputBuffer inputBuffer;
     while (true) {
         if (!read_line(inputBuffer, "> ")) {
@@ -89,17 +123,11 @@ void start_database() {
 }
 
 void writeDB(Table& table) {
-    uint32_t full_page_num = table.num_rows / ROW_COUNT_PER_PAGE;
+    uint32_t full_page_num = table.pager->num_pages;
     for (uint32_t i = 0; i < full_page_num; i++) {
-        table.pager->flushPage(i, PAGE_SIZE);
+        table.pager->flushPage(i);
         free(table.pager->pages[i]);
         table.pager->pages[i] = NULL;
-    }
-    uint32_t additional_row_num =table.num_rows % ROW_COUNT_PER_PAGE;
-    if (additional_row_num) {
-        table.pager->flushPage(full_page_num, additional_row_num*ROW_SIZE);
-        free(table.pager->pages[full_page_num]);
-        table.pager->pages[full_page_num] = NULL;
     }
     table.pager->closeDB();
     table.pager->cleanDB();
@@ -107,7 +135,7 @@ void writeDB(Table& table) {
 
 EXECUTION_RESULT doHelpCommand(Table& table, string& userInput) {
     if (strncmp(userInput.c_str(), ".exit", 5) == 0) {
-        cout << "欢迎下次使用" << endl;
+        cout << "AKDB good bye!" << endl;
         writeDB(table);
         exit(0);
     } else {
