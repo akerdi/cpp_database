@@ -15,7 +15,7 @@ public:
     void cursor_advance();
     // 返回对应的页面偏移量
     void* cursor_value();
-
     static Cursor& start_table(Table& table);
-    static Cursor& end_table(Table& table);
+    static Cursor& table_find(Table& table, uint32_t key);
+    static Cursor& leaf_node_find(Table& table, uint32_t page_num, uint32_t key);
 };

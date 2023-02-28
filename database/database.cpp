@@ -42,11 +42,18 @@ void leaf_node_insert(Cursor& cursor, uint32_t key, Row& value) {
 EXECUTION_RESULT execInsert(Table& table, Statement& statement) {
     Row& row = statement.row;
 
-    Cursor& cursor = Cursor::end_table(table);
+    Cursor& cursor = Cursor::table_find(table, row.id);
     void* node = table.pager->get_page(cursor.page_num);
     uint32_t num_cells = *leaf_node_num_cells(node);
     if (num_cells >= LEAF_NODE_MAX_CELL_COUNT) {
         return EXEC_TABLE_FULL;
+    }
+    // find duplicate keys
+    if (cursor.row_num < num_cells) {
+        uint32_t index_key = *leaf_node_cell_key(node, cursor.row_num);
+        if (index_key == row.id) {
+            return EXEC_DUPLICATE;
+        }
     }
 
     leaf_node_insert(cursor, row.id, row);
@@ -113,6 +120,10 @@ void start_database() {
         }
         switch (execCommand(table, statement)) {
             case EXEC_SUCCESS: break;
+            case EXEC_DUPLICATE: {
+                cout << "key duplicated!" << endl;
+            }
+                break;
             case EXEC_FAIL:
             default: {
                 cout << "execution fail!" << endl;
