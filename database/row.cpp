@@ -44,6 +44,9 @@ void set_node_root(void* node, bool is_root) {
 uint32_t* leaf_node_num_cells(void* node) {
     return (uint32_t*)((char*)node + LEAF_NODE_NUM_CELLS_OFFSET);
 }
+uint32_t* leaf_node_next_page(void* node) {
+    return (uint32_t*)((char*)node + LEAF_NODE_NEXT_PAGE_OFFSETT);
+}
 void* leaf_node_cell(void* node, uint32_t index) {
     return (char*)node + LEAF_NODE_HEADER_SIZE + index*LEAF_NODE_CELL_SIZE;
 }
@@ -57,6 +60,8 @@ void* leaf_node_cell_value(void* node, uint32_t index) {
 void initialize_leaf(void* node) {
     set_node_type(node, NODE_TYPE_LEAF);
     set_node_root(node, false);
+    *leaf_node_num_cells(node) = 0;
+    *leaf_node_next_page(node) = 0;
 }
 #pragma mark internal-------------------
 

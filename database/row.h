@@ -45,7 +45,9 @@ void set_node_root(void* node, bool is_root);
 
 const uint32_t LEAF_NODE_NUM_CELLS_OFFSET = COMMON_NODE_HEADER_SIZE;
 const uint32_t LEAF_NODE_NUM_CELLS_SIZE = sizeof(uint32_t);
-const uint32_t LEAF_NODE_HEADER_SIZE = LEAF_NODE_NUM_CELLS_OFFSET + LEAF_NODE_NUM_CELLS_SIZE;
+const uint32_t LEAF_NODE_NEXT_PAGE_OFFSETT = LEAF_NODE_NUM_CELLS_OFFSET + LEAF_NODE_NUM_CELLS_SIZE;
+const uint32_t LEAF_NODE_NEXT_PAGE_SIZE = sizeof(uint32_t);
+const uint32_t LEAF_NODE_HEADER_SIZE = LEAF_NODE_NUM_CELLS_OFFSET + LEAF_NODE_NUM_CELLS_SIZE + LEAF_NODE_NEXT_PAGE_SIZE;
 
 const uint32_t LEAF_NODE_CELL_KEY_OFFSET = 0;
 const uint32_t LEAF_NODE_CELL_KEY_SIZE = sizeof(uint32_t);
@@ -58,6 +60,7 @@ const uint32_t LEAF_NODE_SPLIT_RIGHT_COUNT = (LEAF_NODE_MAX_CELL_COUNT + 1) / 2;
 const uint32_t LEAF_NODE_SPLIT_LEFT_COUNT = (LEAF_NODE_MAX_CELL_COUNT + 1) - LEAF_NODE_SPLIT_RIGHT_COUNT;
 
 uint32_t* leaf_node_num_cells(void* node);
+uint32_t* leaf_node_next_page(void* node);
 void* leaf_node_cell(void* node, uint32_t index);
 uint32_t* leaf_node_cell_key(void* node, uint32_t index);
 void* leaf_node_cell_value(void* node, uint32_t index);

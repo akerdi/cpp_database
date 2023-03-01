@@ -15,9 +15,11 @@ void Cursor::leaf_node_split_and_insert(uint32_t key, Row& value) {
     void* old_node = pager.get_page(page_num);
     uint32_t old_node_max = get_node_max_key(old_node);
 
-    uint32_t new_child_num = pager.get_unused_page_num();
-    void* new_child = pager.get_page(new_child_num);
+    uint32_t new_child_page_num = pager.get_unused_page_num();
+    void* new_child = pager.get_page(new_child_page_num);
     initialize_leaf(new_child);
+    *leaf_node_next_page(new_child) = *leaf_node_next_page(old_node);
+    *leaf_node_next_page(old_node) = new_child_page_num;
 
     for (int32_t i = LEAF_NODE_MAX_CELL_COUNT; i >= 0; i--) {
         void* destination_node;
@@ -41,7 +43,7 @@ void Cursor::leaf_node_split_and_insert(uint32_t key, Row& value) {
     *leaf_node_num_cells(new_child) = LEAF_NODE_SPLIT_RIGHT_COUNT;
 
     if (is_node_root(old_node)) {
-        create_new_root(page_num, new_child_num);
+        create_new_root(page_num, new_child_page_num);
         return;
     } else {
         cout << "Need implement updating parent node!" << endl;
@@ -85,7 +87,13 @@ void Cursor::cursor_advance() {
     void* node = table->pager->get_page(page_num);
     uint32_t num_cells = *leaf_node_num_cells(node);
     if (row_num >= num_cells) {
-        end_of_table = true;
+        uint32_t next_page_num = *leaf_node_next_page(node);
+        if (next_page_num == 0) {
+            end_of_table = true;
+        } else {
+            page_num = next_page_num;
+            row_num = 0;
+        }
     }
 }
 
