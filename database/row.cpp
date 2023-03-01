@@ -61,7 +61,7 @@ void initialize_leaf(void* node) {
 #pragma mark internal-------------------
 
 uint32_t* internal_node_num_child(void* node) {
-    return (uint32_t*)(char*)node + INTERNAL_NODE_NUM_CHILD_OFFSET;
+    return (uint32_t*)((char*)node + INTERNAL_NODE_NUM_CHILD_OFFSET);
 }
 uint32_t* internal_node_right_child(void* node) {
     return (uint32_t*)((char*)node + INTERNAL_NODE_RIGHT_CHILD_OFFSET);

@@ -125,6 +125,34 @@ Cursor& Cursor::leaf_node_find(Table& table, uint32_t page_num, uint32_t key) {
     Cursor* cursor = new Cursor(table, page_num, min);
     return *cursor;
 }
+Cursor& Cursor::internal_node_find(Table& table, uint32_t page_num, uint32_t key) {
+    void* node = table.pager->get_page(page_num);
+    uint32_t num_childs = *internal_node_num_child(node);
+    uint32_t min = 0, max = num_childs;
+    while (min != max) {
+        uint32_t index = (min + max) / 2;
+        uint32_t index_key = *internal_node_child_value(node, index);
+        if (index_key == key) {
+            min = index;
+            break;
+        } else if (index_key > key) {
+            max = index;
+        } else {
+            min = index + 1;
+        }
+    }
+    uint32_t child_page = *internal_node_child_value(node, min);
+    void* child = table.pager->get_page(child_page);
+    NODE_TYPE type = get_node_type(child);
+    switch (type) {
+        case NODE_TYPE_LEAF: return leaf_node_find(table, child_page, key);
+        case NODE_TYPE_INTERNAL: return internal_node_find(table, child_page, key);
+        default: {
+            cout << __func__ << "Unknown type: " << type << endl;
+            exit(1);
+        }
+    }
+}
 Cursor& Cursor::table_find(Table& table, uint32_t key) {
     uint32_t page_num = table.root_page_num;
     void* node = table.pager->get_page(page_num);
@@ -132,10 +160,7 @@ Cursor& Cursor::table_find(Table& table, uint32_t key) {
     NODE_TYPE type = get_node_type(node);
     switch (type) {
         case NODE_TYPE_LEAF: return leaf_node_find(table, page_num, key);
-        case NODE_TYPE_INTERNAL: {
-            printf("Need to implement search in internal!\n");
-            exit(1);
-        }
+        case NODE_TYPE_INTERNAL: return internal_node_find(table, page_num, key);
         default: {
             printf("Not implement type: %d\n", type);
             exit(1);

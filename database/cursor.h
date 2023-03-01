@@ -21,5 +21,8 @@ public:
     void* cursor_value();
     static Cursor& start_table(Table& table);
     static Cursor& table_find(Table& table, uint32_t key);
+
+private:
+    static Cursor& internal_node_find(Table& table, uint32_t page_num, uint32_t key);
     static Cursor& leaf_node_find(Table& table, uint32_t page_num, uint32_t key);
 };

@@ -12,7 +12,7 @@ EXECUTION_RESULT doHelpCommand(Table& table, string& userInput);
 
 EXECUTION_RESULT execSelect(Table& table, Statement& statement) {
     Row row;
-    Cursor& cursor = Cursor::start_table(table);
+    Cursor& cursor = Cursor::table_find(table, 0);
     while (!cursor.end_of_table) {
         char* slot = (char*)cursor.cursor_value();
         row.deSerializedData(slot);
