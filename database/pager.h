@@ -19,5 +19,7 @@ public:
     void flushPage(uint32_t index);
     void closeDB();
     void cleanDB();
+    uint32_t get_unused_page_num();
+
     static Pager& openPager(const string& filename);
 };

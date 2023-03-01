@@ -2,6 +2,7 @@
     "files.associations": {
         "*.iced": "coffeescript",
         "*.conf": "json",
+        "*.c": "c",
         "istream": "cpp",
         "string": "cpp",
         "*.tcc": "cpp",
@@ -75,6 +76,10 @@
         "numbers": "cpp",
         "semaphore": "cpp",
         "stop_token": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "__bits": "cpp",
+        "__errc": "cpp",
+        "__node_handle": "cpp",
+        "optional": "cpp"
     }
 }

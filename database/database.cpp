@@ -4,6 +4,7 @@
 #include "table.h"
 #include "row.h"
 #include "cursor.h"
+#include "log.hpp"
 
 EXECUTION_RESULT doHelpCommand(Table& table, string& userInput);
 
@@ -22,32 +23,15 @@ EXECUTION_RESULT execSelect(Table& table, Statement& statement) {
     delete &cursor;
     return EXEC_SUCCESS;
 }
-void leaf_node_insert(Cursor& cursor, uint32_t key, Row& value) {
-    void* node = cursor.table->pager->get_page(cursor.page_num);
-    uint32_t num_cells = *leaf_node_num_cells(node);
-    if (cursor.row_num >= LEAF_NODE_MAX_CELL_COUNT) {
-        cout << "Need to implement leaf node splitting!" << endl;
-        exit(1);
-    }
-    if (cursor.row_num < num_cells) {
-        for (int32_t i = num_cells; i > cursor.row_num; i--) {
-            memcpy(leaf_node_cell(node, i), leaf_node_cell(node, i-1), LEAF_NODE_CELL_SIZE);
-        }
-    }
 
-    *leaf_node_num_cells(node) += 1;
-    *leaf_node_cell_key(node, cursor.row_num) = key;
-    value.serializeData((char*)leaf_node_cell_value(node, cursor.row_num));
-}
+
 EXECUTION_RESULT execInsert(Table& table, Statement& statement) {
     Row& row = statement.row;
 
     Cursor& cursor = Cursor::table_find(table, row.id);
     void* node = table.pager->get_page(cursor.page_num);
     uint32_t num_cells = *leaf_node_num_cells(node);
-    if (num_cells >= LEAF_NODE_MAX_CELL_COUNT) {
-        return EXEC_TABLE_FULL;
-    }
+
     // find duplicate keys
     if (cursor.row_num < num_cells) {
         uint32_t index_key = *leaf_node_cell_key(node, cursor.row_num);
@@ -56,7 +40,7 @@ EXECUTION_RESULT execInsert(Table& table, Statement& statement) {
         }
     }
 
-    leaf_node_insert(cursor, row.id, row);
+    cursor.leaf_node_insert(row.id, row);
 
     delete &cursor;
     return EXEC_SUCCESS;
@@ -149,6 +133,10 @@ EXECUTION_RESULT doHelpCommand(Table& table, string& userInput) {
         cout << "AKDB good bye!" << endl;
         writeDB(table);
         exit(0);
+    } else if (strncmp(userInput.c_str(), ".btree", 6) == 0) {
+        cout << "btree:" << endl;
+        print_btree(table, 0, 0);
+        return EXEC_SUCCESS;
     } else {
         return EXEC_UNRECOGNIZED;
     }
